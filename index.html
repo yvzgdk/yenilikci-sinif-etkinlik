@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yenilikçi Öğrenme Ortamları & Sınıf Modeli | Etkileşimli Etkinlik</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRCode.js for instant classroom sharing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f5;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Smooth transitions and drag-and-drop states */
+        .drop-zone {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .drop-zone.drag-over {
+            border-color: #10b981;
+            background-color: #ecfdf5;
+            transform: scale(1.01);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        .draggable-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .draggable-card.selected-card {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+            transform: translateY(-2px);
+        }
+        .draggable-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.92); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.25s ease-out forwards;
+        }
+
+        /* Custom subtle scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand & Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Yenilikçi Öğrenme Ortamları</h1>
+                    <p class="text-xs text-slate-500 font-medium">Etkileşimli Değerlendirme &amp; Sınıf Modeli Etkinliği</p>
+                </div>
+            </div>
+
+            <!-- Right Actions: Score Pill & QR Share Button -->
+            <div class="flex items-center gap-2.5 sm:gap-3">
+                <div id="global-score-badge" class="flex items-center gap-2 bg-slate-100 border border-slate-200 px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-700">
+                    <i data-lucide="award" class="w-4 h-4 text-amber-500"></i>
+                    <span>Toplam Puan: <strong id="total-score-text" class="text-emerald-600">0</strong> / 16</span>
+                </div>
+
+                <button onclick="openQrModal()" class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl transition shadow-sm cursor-pointer" title="Öğrencilerle QR Kod ile Paylaş">
+                    <i data-lucide="qr-code" class="w-4 h-4 text-emerald-400"></i>
+                    <span class="hidden sm:inline">QR ile Paylaş</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Activity Switcher Tabs -->
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 pb-3">
+            <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/70 max-w-xl">
+                <button id="tab-btn-1" onclick="switchTab(1)" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all bg-white text-emerald-700 shadow-sm cursor-pointer">
+                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-extrabold">1</span>
+                    <span>Test (D/Y &amp; Çoktan Seçmeli)</span>
+                </button>
+                <button id="tab-btn-2" onclick="switchTab(2)" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 cursor-pointer">
+                    <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-extrabold">2</span>
+                    <span>Öğrenme Alanları Eşleştirme</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Toast Notification Banner (Replaces alert()) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+        <!-- ========================================================= -->
+        <!-- SECTION 1: 10-QUESTION QUIZ (TRUE/FALSE & MULTIPLE CHOICE) -->
+        <!-- ========================================================= -->
+        <section id="section-1" class="space-y-6 animate-pop">
+            <!-- Section Header Card -->
+            <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold mb-2">
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                        BÖLÜM 1 • 10 SORU
+                    </div>
+                    <h2 class="text-lg sm:text-xl font-bold text-slate-900">Yenilikçi Öğrenme Ortamları Değerlendirme Testi</h2>
+                    <p class="text-sm text-slate-600 mt-1">Doğru/Yanlış ve çoktan seçmeli soruları yanıtlayın. Seçeneklere dokunduğunuzda anında geri bildirim alırsınız.</p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold">
+                        Test Skoru: <span id="quiz-score">0</span> / 10
+                    </div>
+                    <button onclick="resetQuiz()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-sm font-semibold transition cursor-pointer" title="Testi Sıfırla">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        <span>Sıfırla</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Questions Container -->
+            <div id="quiz-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                <!-- Questions rendered dynamically by JS -->
+            </div>
+
+            <!-- Next Activity Prompt -->
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+                <div class="flex items-center gap-3 text-center sm:text-left">
+                    <div class="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0 hidden sm:flex">
+                        <i data-lucide="layers" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base sm:text-lg">2. Etkinliğe Hazır mısınız?</h3>
+                        <p class="text-emerald-100 text-xs sm:text-sm">Yenilikçi Sınıf Modelindeki 6 öğrenme alanını cümlelerle eşleştirin.</p>
+                    </div>
+                </div>
+                <button onclick="switchTab(2)" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-white text-emerald-700 hover:bg-emerald-50 active:scale-95 font-bold text-sm flex items-center justify-center gap-2 transition shadow-sm cursor-pointer">
+                    <span>Eşleştirme Etkinliğine Geç</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- SECTION 2: DRAG & DROP / CLICK-TO-MATCH LEARNING ZONES    -->
+        <!-- ========================================================= -->
+        <section id="section-2" class="hidden space-y-6 animate-pop">
+            <!-- Section Header & Visual Zone Legend -->
+            <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-sm space-y-5">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold mb-2">
+                            <i data-lucide="puzzle" class="w-3.5 h-3.5"></i>
+                            BÖLÜM 2 • SÜRÜKLE-BIRAK &amp; EŞLEŞTİRME
+                        </div>
+                        <h2 class="text-lg sm:text-xl font-bold text-slate-900">Yenilikçi Sınıf Modeli Öğrenme Alanları</h2>
+                        <p class="text-sm text-slate-600 mt-1">
+                            Sağdaki cümle devamlarını (<strong>a-f</strong>) soldaki başlangıçların (<strong>1-6</strong>) yanındaki kutulara <strong>sürükleyip bırakın</strong> veya kartı <strong>seçip kutuya dokunun</strong>.
+                        </p>
+                    </div>
+
+                    <!-- Control Buttons -->
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <button onclick="checkMatching()" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-sm font-bold shadow-sm transition cursor-pointer">
+                            <i data-lucide="check-check" class="w-4 h-4"></i>
+                            <span>Kontrol Et</span>
+                        </button>
+                        <button onclick="showMatchingSolutions()" class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 active:scale-95 text-blue-700 border border-blue-200 text-sm font-semibold transition cursor-pointer">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                            <span>Çözümleri Göster</span>
+                        </button>
+                        <button onclick="resetMatching()" class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-sm font-semibold transition cursor-pointer">
+                            <i data-lucide="shuffle" class="w-4 h-4"></i>
+                            <span>Karıştır</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 6 Learning Zones Visual Diagram Strip (From Image 2) -->
+                <div class="pt-3 border-t border-slate-100">
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">Yenilikçi Sınıf Modeli 6 Öğrenme Alanı:</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                        <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-orange-50 border border-orange-200/70">
+                            <span class="w-8 h-8 rounded-lg bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <i data-lucide="presentation" class="w-4 h-4"></i>
+                            </span>
+                            <span class="text-xs font-bold text-orange-900">Sunum</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-pink-50 border border-pink-200/70">
+                            <span class="w-8 h-8 rounded-lg bg-pink-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <i data-lucide="play" class="w-4 h-4"></i>
+                            </span>
+                            <span class="text-xs font-bold text-pink-900">Etkileşim</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-indigo-50 border border-indigo-200/70">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-900 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <i data-lucide="compass" class="w-4 h-4"></i>
+                            </span>
+                            <span class="text-xs font-bold text-indigo-950">Araştırma</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-red-50 border border-red-200/70">
+                            <span class="w-8 h-8 rounded-lg bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            </span>
+                            <span class="text-xs font-bold text-red-900">Geliştirme</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-sky-50 border border-sky-200/70">
+                            <span class="w-8 h-8 rounded-lg bg-sky-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <i data-lucide="users" class="w-4 h-4"></i>
+                            </span>
+                            <span class="text-xs font-bold text-sky-900">İş Birliği</span>
+                        </div>
+                        <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-lime-50 border border-lime-200/70">
+                            <span class="w-8 h-8 rounded-lg bg-lime-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <i data-lucide="lightbulb" class="w-4 h-4"></i>
+                            </span>
+                            <span class="text-xs font-bold text-lime-900">Üretim</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Matching Board (2 Columns on Desktop, Stacked on Mobile) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Left Column: 6 Sentence Stems & Drop Targets -->
+                <div class="lg:col-span-7 space-y-3.5" id="matching-targets-container">
+                    <!-- Rendered dynamically by JS -->
+                </div>
+
+                <!-- Right Column: Draggable / Clickable Pool -->
+                <div class="lg:col-span-5 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm lg:sticky lg:top-32">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                            <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-400"></i>
+                            Cümle Devamları Havuzu
+                        </h3>
+                        <span id="remaining-cards-count" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">6 Kart</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        💡 <strong>İpucu:</strong> Akıllı tahtada veya telefonda bir kartın üzerine dokunup seçili hale getirdikten sonra soldaki boş kutuya dokunarak da yerleştirebilirsiniz.
+                    </p>
+
+                    <div id="matching-pool-container" class="space-y-2.5 min-h-[120px]">
+                        <!-- Pool cards rendered dynamically by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200/80 py-4 px-4 sm:px-6 mt-auto">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+            <p>Yenilikçi Öğrenme Ortamları &amp; Future Classroom Lab Etkileşimli Eğitim Materyali</p>
+            <p class="font-medium text-slate-400">Akıllı Tahta, Tablet ve Mobil Uyumlu</p>
+        </div>
+    </footer>
+
+    <!-- QR Code Share Modal -->
+    <div id="qr-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4" onclick="if(event.target === this) closeQrModal()">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 animate-pop text-center relative">
+            <button onclick="closeQrModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer" aria-label="Kapat">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="qr-code" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900">Etkinliği Sınıfla Paylaş</h3>
+            <p class="text-xs text-slate-500 mt-1 mb-5">Öğrenciler telefon veya tablet kameralarıyla bu QR kodu okutarak etkinliğe doğrudan katılabilir.</p>
+
+            <!-- QR Code Render Target -->
+            <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-slate-200 inline-flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <div id="qrcode-canvas"></div>
+            </div>
+
+            <!-- Page URL Copy Box -->
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2 text-left">
+                <input id="share-url-input" type="text" readonly class="bg-transparent text-xs text-slate-600 font-medium w-full outline-none px-1.5" value="">
+                <button onclick="copyShareUrl()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shrink-0 transition cursor-pointer">
+                    Kopyala
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. DATA DEFINITIONS (EXTRACTED VERBATIM FROM SCREENSHOTS)
+        // =========================================================================
+
+        const quizQuestions = [
+            {
+                id: 1,
+                type: "Doğru / Yanlış",
+                question: "Yenilikçi öğrenme ortamları, aktif öğrenme uygulamalarını destekler.",
+                options: [
+                    { key: "a", text: "Doğru" },
+                    { key: "b", text: "Yanlış" }
+                ],
+                correct: "a",
+                explanation: "Yenilikçi öğrenme ortamları esnek yapıları ve teknolojik altyapılarıyla aktif öğrenme yöntemlerini doğrudan destekler."
+            },
+            {
+                id: 2,
+                type: "Çoktan Seçmeli",
+                question: "Aşağıdakilerden hangisi yenilikçi sınıflarda aktif öğrenmenin bileşenlerinden biri <u>değildir</u>?",
+                options: [
+                    { key: "a", text: "Teknoloji" },
+                    { key: "b", text: "Çevre" },
+                    { key: "c", text: "Alan Tasarımı" },
+                    { key: "d", text: "Pedagoji" }
+                ],
+                correct: "b",
+                explanation: "Yenilikçi sınıflarda aktif öğrenmenin temel bileşenleri Alan Tasarımı, Pedagoji ve Teknolojidir."
+            },
+            {
+                id: 3,
+                type: "Çoktan Seçmeli",
+                question: "Hangisi 21. yüzyıl becerilerinden biridir?",
+                options: [
+                    { key: "a", text: "Bilgi aktarımı" },
+                    { key: "b", text: "Yönergeleri takip etme" },
+                    { key: "c", text: "Ezberleme" },
+                    { key: "d", text: "Eleştirel Düşünme" }
+                ],
+                correct: "d",
+                explanation: "Eleştirel düşünme, yaratıcılık, iletişim ve iş birliği temel 21. yüzyıl becerilerindendir."
+            },
+            {
+                id: 4,
+                type: "Çoktan Seçmeli",
+                question: "Aşağıdakilerden hangisi yenilikçi öğrenme ortamlarında aktif öğrenmenin unsurlarından biridir?",
+                options: [
+                    { key: "a", text: "Sabit alan düzenlemesi" },
+                    { key: "b", text: "Sağlıklı beslenme" },
+                    { key: "c", text: "Yenilikçi pedagojik uygulamalar" },
+                    { key: "d", text: "Hareketli yaşam" }
+                ],
+                correct: "c",
+                explanation: "Öğrenci merkezli yenilikçi pedagojik uygulamalar aktif öğrenmenin temel unsurudur."
+            },
+            {
+                id: 5,
+                type: "Çoktan Seçmeli",
+                question: "Aşağıdakilerden hangisi Yenilikçi Sınıf Modelinde öğrenme alanlarından biridir?",
+                options: [
+                    { key: "a", text: "Müzik alanı" },
+                    { key: "b", text: "İş birliği alanı" },
+                    { key: "c", text: "Spor alanı" },
+                    { key: "d", text: "Kantin alanı" }
+                ],
+                correct: "b",
+                explanation: "Yenilikçi Sınıf Modeli (FCL) 6 alandan oluşur: Etkileşim, Sunum, Araştırma, Üretim, İş Birliği ve Geliştirme."
+            },
+            {
+                id: 6,
+                type: "Doğru / Yanlış",
+                question: "Dersler yenilikçi sınıflarda daha keyifli işlenir.",
+                options: [
+                    { key: "a", text: "Doğru" },
+                    { key: "b", text: "Yanlış" }
+                ],
+                correct: "a",
+                explanation: "Etkileşimli ve öğrenci odaklı etkinlikler sayesinde dersler daha ilgi çekici ve keyifli hale gelir."
+            },
+            {
+                id: 7,
+                type: "Çoktan Seçmeli",
+                question: "Aşağıdakilerden hangisi Yenilikçi Sınıf Modelinde öğrenme alanlarından biri <u>değildir</u>?",
+                options: [
+                    { key: "a", text: "Etkileşim" },
+                    { key: "b", text: "İstasyon" },
+                    { key: "c", text: "Geliştirme" },
+                    { key: "d", text: "Sunum" }
+                ],
+                correct: "b",
+                explanation: "'İstasyon' bu modeldeki 6 öğrenme alanından biri değildir (Doğrusu: Araştırma, Üretim ve İş Birliği)."
+            },
+            {
+                id: 8,
+                type: "Çoktan Seçmeli",
+                question: "Aşağıdakilerden hangisi yenilikçi öğrenme ortamlarında öğrenmenin avantajlarındandır?",
+                options: [
+                    { key: "a", text: "Geleneksel yöntemleri destekler." },
+                    { key: "b", text: "Öğrencileri motive eder." },
+                    { key: "c", text: "Öğretmenin otoritesini arttırır." },
+                    { key: "d", text: "Sınıf düzeni sabittir." }
+                ],
+                correct: "b",
+                explanation: "Aktif katılım ve esnek öğrenme alanları öğrencilerin derse olan motivasyonunu artırır."
+            },
+            {
+                id: 9,
+                type: "Çoktan Seçmeli",
+                question: "Aşağıdakilerden hangisi 21. Yüzyıl becerilerinden <u>değildir</u>?",
+                options: [
+                    { key: "a", text: "Yaratıcılık" },
+                    { key: "b", text: "İletişim" },
+                    { key: "c", text: "Dijital Okuryazarlık" },
+                    { key: "d", text: "Terimleri tanımlama" }
+                ],
+                correct: "d",
+                explanation: "Ezbere dayalı terim tanımlama geleneksel bir alt düzey bilişsel beceridir; 21. yüzyıl becerisi değildir."
+            },
+            {
+                id: 10,
+                type: "Doğru / Yanlış",
+                question: "Bu eğitim, geleneksel yaklaşımları teşvik eder.",
+                options: [
+                    { key: "a", text: "Doğru" },
+                    { key: "b", text: "Yanlış" }
+                ],
+                correct: "b",
+                explanation: "Yenilikçi öğrenme ortamları ezberci geleneksel yaklaşımlar yerine aktif ve öğrenci merkezli öğrenmeyi teşvik eder."
+            }
+        ];
+
+        const matchingItems = [
+            {
+                id: 1,
+                stem: "1. Öğrencilerin eleştirel düşünerek aktif",
+                correctLetter: "c",
+                endingText: "sorgulama yapabildiği alandır.",
+                zoneName: "Araştırma Alanı",
+                zoneColor: "bg-indigo-900 text-white",
+                zoneBadgeBg: "bg-indigo-50 text-indigo-900 border-indigo-200",
+                zoneIcon: "compass"
+            },
+            {
+                id: 2,
+                stem: "2. Öğrencilerin iletişim kurarak ürünlerini paylaşabildiği,",
+                correctLetter: "f",
+                endingText: "sunabildiği ve geribildirim alabildiği alandır.",
+                zoneName: "Sunum Alanı",
+                zoneColor: "bg-orange-500 text-white",
+                zoneBadgeBg: "bg-orange-50 text-orange-900 border-orange-200",
+                zoneIcon: "presentation"
+            },
+            {
+                id: 3,
+                stem: "3. Öğrencilerin bağımsız şekilde öğrenebildiği bu",
+                correctLetter: "a",
+                endingText: "informel öğrenme alanında öğretmen sürece müdahil olmaz, gözlemcidir.",
+                zoneName: "Geliştirme Alanı",
+                zoneColor: "bg-red-600 text-white",
+                zoneBadgeBg: "bg-red-50 text-red-900 border-red-200",
+                zoneIcon: "refresh-cw"
+            },
+            {
+                id: 4,
+                stem: "4. Öğrencilerin yaratıcılık becerilerini kullandığı ve",
+                correctLetter: "b",
+                endingText: "çıktı geliştirdiği alandır.",
+                zoneName: "Üretim Alanı",
+                zoneColor: "bg-lime-600 text-white",
+                zoneBadgeBg: "bg-lime-50 text-lime-900 border-lime-200",
+                zoneIcon: "lightbulb"
+            },
+            {
+                id: 5,
+                stem: "5. Öğretmenin öğrenme sürecine liderlik ettiği ve tüm",
+                correctLetter: "d",
+                endingText: "öğrencilerle dijital araçları kullanarak etkileşim kurduğu alandır.",
+                zoneName: "Etkileşim Alanı",
+                zoneColor: "bg-pink-500 text-white",
+                zoneBadgeBg: "bg-pink-50 text-pink-900 border-pink-200",
+                zoneIcon: "play"
+            },
+            {
+                id: 6,
+                stem: "6. Öğrencilerin ortak çalışarak fikir alışverişi",
+                correctLetter: "e",
+                endingText: "yaptığı alanda, öğretmen rehber rolündedir.",
+                zoneName: "İş Birliği Alanı",
+                zoneColor: "bg-sky-500 text-white",
+                zoneBadgeBg: "bg-sky-50 text-sky-900 border-sky-200",
+                zoneIcon: "users"
+            }
+        ];
+
+        // =========================================================================
+        // 2. APPLICATION STATE
+        // =========================================================================
+
+        let userQuizAnswers = {}; // { questionId: selectedOptionKey }
+        let userMatches = {};     // { stemId: placedLetter }
+        let matchingChecked = false;
+        let selectedPoolLetter = null; // For click-to-place interaction
+        let shuffledPoolOrder = [];
+
+        // =========================================================================
+        // 3. INITIALIZATION & TAB NAVIGATION
+        // =========================================================================
+
+        document.addEventListener("DOMContentLoaded", () => {
+            renderQuiz();
+            initMatchingPool();
+            renderMatchingBoard();
+            updateGlobalScore();
+            lucide.createIcons();
+        });
+
+        function switchTab(tabNumber) {
+            const sec1 = document.getElementById("section-1");
+            const sec2 = document.getElementById("section-2");
+            const btn1 = document.getElementById("tab-btn-1");
+            const btn2 = document.getElementById("tab-btn-2");
+
+            if (tabNumber === 1) {
+                sec1.classList.remove("hidden");
+                sec2.classList.add("hidden");
+
+                btn1.className = "flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all bg-white text-emerald-700 shadow-sm cursor-pointer";
+                btn1.querySelector("span").className = "w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-extrabold";
+
+                btn2.className = "flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 cursor-pointer";
+                btn2.querySelector("span").className = "w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-extrabold";
+            } else {
+                sec2.classList.remove("hidden");
+                sec1.classList.add("hidden");
+
+                btn2.className = "flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all bg-white text-blue-700 shadow-sm cursor-pointer";
+                btn2.querySelector("span").className = "w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-extrabold";
+
+                btn1.className = "flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 cursor-pointer";
+                btn1.querySelector("span").className = "w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-extrabold";
+            }
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        // =========================================================================
+        // 4. SECTION 1: QUIZ LOGIC & RENDERING
+        // =========================================================================
+
+        function renderQuiz() {
+            const container = document.getElementById("quiz-container");
+            container.innerHTML = "";
+
+            quizQuestions.forEach((q) => {
+                const chosen = userQuizAnswers[q.id];
+                const isAnswered = chosen !== undefined;
+                const isCorrect = chosen === q.correct;
+
+                const card = document.createElement("div");
+                card.className = `bg-white rounded-2xl p-5 border transition-all shadow-xs flex flex-col justify-between ${
+                    isAnswered
+                        ? isCorrect
+                            ? "border-emerald-300 ring-2 ring-emerald-500/10"
+                            : "border-rose-300 ring-2 ring-rose-500/10"
+                        : "border-slate-200/80 hover:border-slate-300"
+                }`;
+
+                // Header badge + question text
+                let optionsHtml = q.options.map((opt) => {
+                    let btnStyle = "border-slate-200 bg-slate-50/70 hover:bg-slate-100 text-slate-700";
+                    let badgeStyle = "bg-white border-slate-300 text-slate-600";
+                    let statusIcon = "";
+
+                    if (isAnswered) {
+                        if (opt.key === q.correct) {
+                            btnStyle = "border-emerald-500 bg-emerald-50 text-emerald-900 font-semibold";
+                            badgeStyle = "bg-emerald-600 border-emerald-600 text-white";
+                            statusIcon = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 shrink-0"></i>`;
+                        } else if (opt.key === chosen && chosen !== q.correct) {
+                            btnStyle = "border-rose-500 bg-rose-50 text-rose-900 font-semibold";
+                            badgeStyle = "bg-rose-600 border-rose-600 text-white";
+                            statusIcon = `<i data-lucide="x-circle" class="w-4 h-4 text-rose-600 shrink-0"></i>`;
+                        } else {
+                            btnStyle = "border-slate-100 bg-slate-50/40 text-slate-400 opacity-75";
+                        }
+                    }
+
+                    return `
+                        <button
+                            onclick="selectQuizOption(${q.id}, '${opt.key}')"
+                            class="w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between gap-2.5 cursor-pointer active:scale-[0.99] ${btnStyle}"
+                        >
+                            <div class="flex items-center gap-3">
+                                <span class="w-7 h-7 rounded-lg border text-xs font-extrabold uppercase flex items-center justify-center shrink-0 transition-colors ${badgeStyle}">
+                                    ${opt.key}
+                                </span>
+                                <span class="text-sm leading-snug">${opt.text}</span>
+                            </div>
+                            ${statusIcon}
+                        </button>
+                    `;
+                }).join("");
+
+                // Grid layout for True/False vs Multiple Choice
+                const optionsGridClass = q.options.length === 2 ? "grid grid-cols-2 gap-2.5" : "space-y-2";
+
+                // Explanation banner when answered
+                const feedbackHtml = isAnswered
+                    ? `<div class="mt-3.5 p-3 rounded-xl text-xs leading-relaxed flex items-start gap-2 animate-pop ${
+                          isCorrect ? "bg-emerald-50/80 text-emerald-800 border border-emerald-200/70" : "bg-rose-50/80 text-rose-800 border border-rose-200/70"
+                      }">
+                          <i data-lucide="${isCorrect ? "sparkles" : "info"}" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                          <div>
+                              <strong>${isCorrect ? "Harika! Doğru cevap." : `Yanlış cevap. Doğru seçenek: ${q.correct.toUpperCase()}.`}</strong>
+                              <span class="block mt-0.5 opacity-90">${q.explanation}</span>
+                          </div>
+                       </div>`
+                    : "";
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-2.5">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                                Soru ${q.id}
+                            </span>
+                            <span class="text-[11px] font-semibold text-slate-400">${q.type}</span>
+                        </div>
+                        <h3 class="text-sm sm:text-[15px] font-bold text-slate-800 leading-relaxed mb-4">
+                            ${q.question}
+                        </h3>
+                    </div>
+                    <div>
+                        <div class="${optionsGridClass}">
+                            ${optionsHtml}
+                        </div>
+                        ${feedbackHtml}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+            updateGlobalScore();
+        }
+
+        function selectQuizOption(questionId, optionKey) {
+            userQuizAnswers[questionId] = optionKey;
+            renderQuiz();
+
+            // Check if all 10 are answered
+            if (Object.keys(userQuizAnswers).length === quizQuestions.length) {
+                const score = calculateQuizScore();
+                showToast(`1. Bölüm tamamlandı! Test skorunuz: ${score} / 10`, score >= 7 ? "success" : "info");
+            }
+        }
+
+        function resetQuiz() {
+            userQuizAnswers = {};
+            renderQuiz();
+            showToast("Test yanıtları sıfırlandı.", "info");
+        }
+
+        function calculateQuizScore() {
+            let correctCount = 0;
+            quizQuestions.forEach((q) => {
+                if (userQuizAnswers[q.id] === q.correct) correctCount++;
+            });
+            return correctCount;
+        }
+
+        // =========================================================================
+        // 5. SECTION 2: MATCHING / DRAG & DROP / CLICK-TO-PLACE LOGIC
+        // =========================================================================
+
+        function initMatchingPool() {
+            // Shuffle letters a-f
+            const letters = matchingItems.map((item) => item.correctLetter);
+            for (let i = letters.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [letters[i], letters[j]] = [letters[j], letters[i]];
+            }
+            shuffledPoolOrder = letters;
+        }
+
+        function getItemByLetter(letter) {
+            return matchingItems.find((item) => item.correctLetter === letter);
+        }
+
+        function renderMatchingBoard() {
+            const targetsContainer = document.getElementById("matching-targets-container");
+            const poolContainer = document.getElementById("matching-pool-container");
+            const remainingBadge = document.getElementById("remaining-cards-count");
+
+            targetsContainer.innerHTML = "";
+            poolContainer.innerHTML = "";
+
+            // 1. Render Left Side Targets (1 to 6)
+            matchingItems.forEach((item) => {
+                const placedLetter = userMatches[item.id];
+                const placedObj = placedLetter ? getItemByLetter(placedLetter) : null;
+
+                let statusBorder = "border-slate-200/90 bg-white";
+                let dropBoxStyle = "border-dashed border-slate-300 bg-slate-50/80 text-slate-400 hover:border-blue-400 hover:bg-blue-50/40";
+                let statusBadgeHtml = "";
+
+                if (placedObj) {
+                    if (matchingChecked) {
+                        const isMatchCorrect = placedLetter === item.correctLetter;
+                        if (isMatchCorrect) {
+                            statusBorder = "border-emerald-300 bg-emerald-50/30";
+                            dropBoxStyle = "border-solid border-emerald-500 bg-emerald-50 text-emerald-950";
+                            statusBadgeHtml = `
+                                <div class="mt-2.5 flex flex-wrap items-center justify-between gap-2 animate-pop">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border ${item.zoneBadgeBg}">
+                                        <i data-lucide="${item.zoneIcon}" class="w-3.5 h-3.5"></i>
+                                        ${item.zoneName}
+                                    </span>
+                                    <span class="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                                        <i data-lucide="check-circle-2" class="w-4 h-4"></i> Doğru Eşleşme
+                                    </span>
+                                </div>
+                            `;
+                        } else {
+                            statusBorder = "border-rose-300 bg-rose-50/30";
+                            dropBoxStyle = "border-solid border-rose-500 bg-rose-50 text-rose-950";
+                            statusBadgeHtml = `
+                                <div class="mt-2 flex items-center justify-between text-xs font-bold text-rose-600 animate-pop">
+                                    <span class="flex items-center gap-1"><i data-lucide="x-circle" class="w-4 h-4"></i> Yanlış eşleşme, çıkarıp tekrar deneyin.</span>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        dropBoxStyle = "border-solid border-blue-400 bg-blue-50/70 text-slate-800 shadow-2xs";
+                    }
+                } else if (selectedPoolLetter) {
+                    // Highlight available drop zones when a card is selected via tap/click
+                    dropBoxStyle = "border-dashed border-blue-500 bg-blue-50/60 text-blue-600 ring-2 ring-blue-500/20 cursor-pointer";
+                }
+
+                const rowCard = document.createElement("div");
+                rowCard.className = `rounded-2xl p-4 sm:p-5 border shadow-xs transition-all ${statusBorder}`;
+
+                rowCard.innerHTML = `
+                    <div class="flex flex-col gap-3">
+                        <p class="text-sm sm:text-[15px] font-bold text-slate-800 leading-snug">
+                            ${item.stem}
+                        </p>
+
+                        <!-- Drop Target Box -->
+                        <div
+                            data-target-id="${item.id}"
+                            ondragover="handleDragOver(event)"
+                            ondragleave="handleDragLeave(event)"
+                            ondrop="handleDrop(event, ${item.id})"
+                            onclick="handleTargetClick(${item.id})"
+                            class="drop-zone min-h-[54px] rounded-xl border-2 p-3 flex items-center justify-between gap-3 cursor-pointer ${dropBoxStyle}"
+                        >
+                            ${
+                                placedObj
+                                    ? `<div class="flex items-center gap-2.5 text-left">
+                                           <span class="w-7 h-7 rounded-lg bg-slate-800 text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                                               ${placedObj.correctLetter})
+                                           </span>
+                                           <span class="text-xs sm:text-sm font-medium leading-snug">${placedObj.endingText}</span>
+                                       </div>
+                                       <button onclick="event.stopPropagation(); removePlacedItem(${item.id})" class="p-1.5 rounded-lg bg-white/80 hover:bg-rose-100 text-slate-500 hover:text-rose-600 border border-slate-200/80 transition shrink-0 cursor-pointer" title="Kartı Havuza Geri Gönder">
+                                           <i data-lucide="x" class="w-4 h-4"></i>
+                                       </button>`
+                                    : `<div class="flex items-center gap-2 text-xs font-semibold mx-auto py-1">
+                                           <i data-lucide="arrow-down-to-line" class="w-4 h-4"></i>
+                                           <span>${selectedPoolLetter ? `Seçili "${selectedPoolLetter.toUpperCase()}" kartını buraya yerleştirmek için dokunun` : "Cümle devamını buraya sürükleyin veya seçip dokunun"}</span>
+                                       </div>`
+                            }
+                        </div>
+                        ${statusBadgeHtml}
+                    </div>
+                `;
+
+                targetsContainer.appendChild(rowCard);
+            });
+
+            // 2. Render Right Side Pool (Unplaced Cards)
+            const placedLettersSet = new Set(Object.values(userMatches));
+            const availableLetters = shuffledPoolOrder.filter((l) => !placedLettersSet.has(l));
+
+            remainingBadge.textContent = `${availableLetters.length} Kart`;
+
+            if (availableLetters.length === 0) {
+                poolContainer.innerHTML = `
+                    <div class="text-center py-8 px-4 rounded-xl bg-emerald-50/70 border border-emerald-200/70 text-emerald-800">
+                        <i data-lucide="check-circle" class="w-8 h-8 text-emerald-600 mx-auto mb-2"></i>
+                        <p class="text-sm font-bold">Tüm kartlar yerleştirildi!</p>
+                        <p class="text-xs text-emerald-700 mt-1">Yanıtlarınızı doğrulamak için yukarıdaki <strong>"Kontrol Et"</strong> butonuna basın.</p>
+                    </div>
+                `;
+            } else {
+                availableLetters.forEach((letter) => {
+                    const obj = getItemByLetter(letter);
+                    const isSelected = selectedPoolLetter === letter;
+
+                    const cardEl = document.createElement("div");
+                    cardEl.draggable = true;
+                    cardEl.className = `draggable-card p-3.5 rounded-xl border-2 bg-white hover:border-blue-400 cursor-grab active:cursor-grabbing flex items-start gap-3 shadow-2xs ${
+                        isSelected ? "selected-card" : "border-slate-200"
+                    }`;
+
+                    cardEl.ondragstart = (e) => handleDragStart(e, letter);
+                    cardEl.ondragend = (e) => handleDragEnd(e);
+                    cardEl.onclick = () => handlePoolCardClick(letter);
+
+                    cardEl.innerHTML = `
+                        <span class="w-7 h-7 rounded-lg ${isSelected ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"} text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 transition-colors">
+                            ${letter})
+                        </span>
+                        <p class="text-xs sm:text-sm font-medium text-slate-700 leading-snug flex-1">
+                            ${obj.endingText}
+                        </p>
+                        <i data-lucide="grip-horizontal" class="w-4 h-4 text-slate-300 shrink-0 mt-1"></i>
+                    `;
+
+                    poolContainer.appendChild(cardEl);
+                });
+            }
+
+            lucide.createIcons();
+            updateGlobalScore();
+        }
+
+        // Drag & Drop Handlers
+        function handleDragStart(e, letter) {
+            e.dataTransfer.setData("text/plain", letter);
+            e.currentTarget.classList.add("dragging");
+            selectedPoolLetter = letter;
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove("dragging");
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add("drag-over");
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove("drag-over");
+        }
+
+        function handleDrop(e, targetId) {
+            e.preventDefault();
+            e.currentTarget.classList.remove("drag-over");
+            const letter = e.dataTransfer.getData("text/plain");
+            if (letter) {
+                placeCardInTarget(targetId, letter);
+            }
+        }
+
+        // Touch / Click-to-Select & Click-to-Place Handlers
+        function handlePoolCardClick(letter) {
+            if (selectedPoolLetter === letter) {
+                selectedPoolLetter = null;
+            } else {
+                selectedPoolLetter = letter;
+            }
+            renderMatchingBoard();
+        }
+
+        function handleTargetClick(targetId) {
+            if (selectedPoolLetter) {
+                placeCardInTarget(targetId, selectedPoolLetter);
+            } else if (userMatches[targetId]) {
+                // If clicking an occupied slot without a pool selection, return it to pool
+                removePlacedItem(targetId);
+            } else {
+                showToast("Önce sağdaki havuzdan bir cümle kartı seçin veya sürükleyin.", "info");
+            }
+        }
+
+        function placeCardInTarget(targetId, letter) {
+            // Remove letter from any other target if somehow assigned
+            Object.keys(userMatches).forEach((key) => {
+                if (userMatches[key] === letter) {
+                    delete userMatches[key];
+                }
+            });
+            userMatches[targetId] = letter;
+            selectedPoolLetter = null;
+            matchingChecked = false;
+            renderMatchingBoard();
+        }
+
+        function removePlacedItem(targetId) {
+            delete userMatches[targetId];
+            matchingChecked = false;
+            renderMatchingBoard();
+        }
+
+        function checkMatching() {
+            const placedCount = Object.keys(userMatches).length;
+            if (placedCount === 0) {
+                showToast("Kontrol etmeden önce en az bir eşleştirme yapmalısınız.", "warning");
+                return;
+            }
+            matchingChecked = true;
+            selectedPoolLetter = null;
+            renderMatchingBoard();
+
+            const correctMatches = calculateMatchingScore();
+            if (correctMatches === matchingItems.length) {
+                showToast("Tebrikler! 6 öğrenme alanının tamamını doğru eşleştirdiniz!", "success");
+            } else {
+                showToast(`${matchingItems.length} maddeden ${correctMatches} tanesi doğru eşleşti.`, "info");
+            }
+        }
+
+        function showMatchingSolutions() {
+            matchingItems.forEach((item) => {
+                userMatches[item.id] = item.correctLetter;
+            });
+            matchingChecked = true;
+            selectedPoolLetter = null;
+            renderMatchingBoard();
+            showToast("Tüm doğru eşleştirmeler ve öğrenme alanları gösterildi.", "success");
+        }
+
+        function resetMatching() {
+            userMatches = {};
+            matchingChecked = false;
+            selectedPoolLetter = null;
+            initMatchingPool();
+            renderMatchingBoard();
+            showToast("Kartlar yeniden karıştırıldı.", "info");
+        }
+
+        function calculateMatchingScore() {
+            let correct = 0;
+            matchingItems.forEach((item) => {
+                if (userMatches[item.id] === item.correctLetter) {
+                    correct++;
+                }
+            });
+            return correct;
+        }
+
+        // =========================================================================
+        // 6. GLOBAL SCORE & UI HELPERS (TOASTS & QR MODAL)
+        // =========================================================================
+
+        function updateGlobalScore() {
+            const qScore = calculateQuizScore();
+            const mScore = matchingChecked ? calculateMatchingScore() : 0;
+            document.getElementById("quiz-score").textContent = qScore;
+            document.getElementById("total-score-text").textContent = qScore + mScore;
+        }
+
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+
+            const styles = {
+                success: "bg-emerald-900 text-white border-emerald-700",
+                warning: "bg-amber-900 text-white border-amber-700",
+                info: "bg-slate-900 text-white border-slate-700"
+            };
+            const icons = {
+                success: "check-circle-2",
+                warning: "alert-circle",
+                info: "info"
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-xl text-xs sm:text-sm font-medium animate-pop ${styles[type] || styles.info}`;
+            toast.innerHTML = `
+                <i data-lucide="${icons[type] || icons.info}" class="w-4 h-4 shrink-0 text-emerald-400"></i>
+                <span class="flex-1">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.transform = "translateY(8px)";
+                toast.style.transition = "all 0.25s ease";
+                setTimeout(() => toast.remove(), 250);
+            }, 3200);
+        }
+
+        // QR Modal Logic
+        let qrGenerated = false;
+        function openQrModal() {
+            const modal = document.getElementById("qr-modal");
+            const urlInput = document.getElementById("share-url-input");
+            const currentUrl = window.location.href;
+
+            urlInput.value = currentUrl;
+            modal.classList.remove("hidden");
+
+            if (!qrGenerated) {
+                const qrTarget = document.getElementById("qrcode-canvas");
+                qrTarget.innerHTML = "";
+                try {
+                    new QRCode(qrTarget, {
+                        text: currentUrl,
+                        width: 180,
+                        height: 180,
+                        colorDark: "#0f172a",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                    qrGenerated = true;
+                } catch (err) {
+                    qrTarget.innerHTML = `<p class="text-xs text-slate-500 p-4">Bağlantı adresi QR koda dönüştürülemedi.</p>`;
+                }
+            }
+        }
+
+        function closeQrModal() {
+            document.getElementById("qr-modal").classList.add("hidden");
+        }
+
+        function copyShareUrl() {
+            const input = document.getElementById("share-url-input");
+            input.select();
+            input.setSelectionRange(0, 99999);
+            try {
+                document.execCommand("copy");
+                showToast("Sayfa bağlantısı panoya kopyalandı!", "success");
+            } catch (e) {
+                showToast("Bağlantı kopyalanamadı.", "warning");
+            }
+        }
+    </script>
+</body>
+</html>
